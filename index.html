@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Stickman Gra</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111; color: #eee; text-align: center; }
+    h1 { color: #4caf50; }
+    .menu, .battle, .shop { display: none; margin-top: 20px; }
+    /* 🎯 Wybór celów ataku */
+#targetSelect {
+  margin: 15px auto;
+  padding: 10px;
+  background: #1b1b1b;
+  border: 2px solid #4caf50;
+  border-radius: 12px;
+  width: 70%;
+  color: #eee;
+}
+
+.target-row {
+  margin: 8px 0;
+  padding: 8px;
+  background: #222;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.target-row b {
+  color: #4caf50;
+}
+
+.target-select {
+  padding: 4px 8px;
+  background: #333;
+  border: 1px solid #4caf50;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.target-select:hover {
+  background: #4caf50;
+  color: #000;
+}
+    .card { border: 2px solid #4caf50; border-radius: 12px; padding: 10px; margin: 10px; display: inline-block; background: #222; width: 170px; }
+    button { padding: 8px 15px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; }
+    button:hover { opacity: 0.8; }
+    .green { background: #4caf50; color: #fff; }
+    .red { background: #f44336; color: #fff; }
+    .blue { background: #2196f3; color: #fff; }
+  </style>
+</head>
+<body>
+  <h1>Stickman Gra</h1>
+  
+<div id="mainMenu">
+  <p>Wybierz do 3 postaci:</p>
+  <div id="characterSelect"></div>
+
+  <h3>Twoja drużyna:</h3>
+  <div id="teamDisplay"></div> <!-- tylko jeden -->
+
+  <p>Twoje 💵: <span id="mainMoney">0</span></p>
+  <button class="green" onclick="startGame()">Start Gry</button>
+  <button class="blue" onclick="openShop()">Sklep</button>
+  <button class="red" onclick="resetGame()">Reset gry</button>
+</div>
+
+<div class="battle" id="battleScreen">
+  <h2>Poziom <span id="levelNum"></span></h2>
+  <div id="playerStats"></div>
+  <div id="enemyStats"></div>
+  <div id="targetSelect"></div>
+  <button class="green" onclick="attack()">Atakuj</button>
+  <div id="battleLog"></div>
+</div>
+  
+  <div class="shop" id="shopScreen">
+    <h2>Sklep</h2>
+    <div id="shopOffer"></div>
+    <div id="shopItems"></div>
+    <p>Twoje 💵: <span id="money">0</span></p>
+    <button class="blue" onclick="closeShop()">Powrót</button>
+  </div>
+  
+  <audio id="attackSound" src="attack.mp3"></audio>
+
+  <script>
+    const baseCharacters = [
+      { name: "Dawid", atk: 3, hp: 20 }
+    ];
+
+const enemies = [
+  { name: "Stickman", atk: 1, hp: 10 },
+  { name: "Mutant Stickman", atk: 2, hp: 22 },
+  { name: "Astro Mutant Stickman", atk: 6, hp: 22 },
+  { name: "Spider Stick", atk: 4, hp: 12 },
+  { name: "Stick bird", atk: 2, hp: 10 },
+  { name: "Armor Stickman", atk: 1, hp: 15 },
+  { name: "Police Stickman", atk: 4, hp: 12 },
+  { name: "Glitch Stickman", atk: 3, hp: 24 },
+  { name: "Skeleton Stickman", atk: 2, hp: 12 },
+  { name: "Zombie Stickman", atk: 2, hp: 16 },
+  { name: "Wizard Stickman", atk: 3, hp: 26, heal: 1 },
+  { name: "Mega Armor Stickman", atk: 1, hp: 20 },
+  { name: "Titan Stickman", atk: 4, hp: 40, boss: true },
+  { name: "Arquel", hp: 100, attack: 5, boss: true }
+];
+
+const shopCharacters = [
+  { name: "Adam", cost: 138, atk: 6, hp: 30 },
+  { name: "Błażej", cost: 320, atk: 8, hp: 40 },
+  { name: "Czarek", cost: 320, atk: 8, hp: 40 },
+  { name: "Damianek", cost: 72, atk: 4, hp: 18 },
+  { name: "Dorian", cost: 66, atk: 3, hp: 22 },
+  { name: "Ewa1", cost: 192, atk: 8, hp: 24 },
+  { name: "Ewa2", cost: 67, atk: 3, hp: 22, heal: 1 },
+  { name: "Filip", cost: 85, atk: 5, hp: 17 },
+  { name: "Gabriel", cost: 140, atk: 7, hp: 20 },
+  { name: "Gabrysia", cost: 44, atk: 2, hp: 22 },
+  { name: "Janek", cost: 105, atk: 5, hp: 21 },
+  { name: "Julka", cost: 67, atk: 1, hp: 37, heal: 3 },
+  { name: "Jurek", cost: 160, atk: 4, hp: 40 },
+  { name: "Kacper1", cost: 100, atk: 5, hp: 20 },
+  { name: "Kacper2", cost: 80, atk: 4, hp: 20 },
+  { name: "Kacper3", cost: 160, atk: 8, hp: 20 },
+  { name: "Karol", cost: 104, atk: 4, hp: 26 },
+  { name: "Ksawery", cost: 85, atk: 5, hp: 17 },
+  { name: "Kuba1", cost: 240, atk: 6, hp: 40 },
+  { name: "Kuba2", cost: 104, atk: 4, hp: 26 },
+  { name: "Kuba3", cost: 120, atk: 6, hp: 20 },
+  { name: "Lena1", cost: 84, atk: 7, hp: 12 },
+  { name: "Lena2", cost: 82, atk: 2, hp: 40, heal: 2 },
+  { name: "Łukasz", cost: 90, atk: 6, hp: 15 },
+  { name: "Maciej", cost: 200, atk: 5, hp: 40 },
+  { name: "Maciek", cost: 80, atk: 4, hp: 20 },
+  { name: "Mikołaj", cost: 80, atk: 4, hp: 20 },
+  { name: "Milena", cost: 196, atk: 7, hp: 28 },
+  { name: "Natalka", cost: 47, atk: 2, hp: 23, heal: 1 },
+  { name: "Natan", cost: 63, atk: 3, hp: 21 },
+  { name: "Nataniel", cost: 400, atk: 10, hp: 40 },
+  { name: "Nikola", cost: 203, atk: 7, hp: 29 },
+  { name: "Ola", cost: 58, atk: 4, hp: 12, stun: { duration: 2, cooldown: 5, lastUsed: -5 } },
+  { name: "Oli", cost: 99, atk: 3, hp: 33 },
+  { name: "Oliwia", cost: 140, atk: 7, hp: 20 },
+  { name: "Oliwier", cost: 240, atk: 8, hp: 30 },
+  { name: "Oskar", cost: 45, atk: 2, hp: 22, heal: 1 },
+  { name: "Oski", cost: 198, atk: 9, hp: 22 },
+  { name: "Piotrek", cost: 320, atk: 8, hp: 40 },
+  { name: "Radek", cost: 240, atk: 8, hp: 30 },
+  { name: "Rosti", cost: 60, atk: 3, hp: 20 },
+  { name: "Roxana", cost: 80, atk: 2, hp: 40 },
+  { name: "Sławek", cost: 138, atk: 6, hp: 30 },
+  { name: "Staś", cost: 72, atk: 4, hp: 18 },
+  { name: "Sylwia", cost: 96, atk: 4, hp: 24 },
+  { name: "Szymon", cost: 60, atk: 2, hp: 30 },
+  { name: "Wiktoria", cost: 252, atk: 9, hp: 28 },
+  { name: "Wojtek", cost: 125, atk: 5, hp: 25 },
+  { name: "Xantia", cost: 42, atk: 2, hp: 20, heal: 2 },
+  { name: "Zuzia", cost: 162, atk: 8, hp: 19, stun: { duration: 2, cooldown: 5, lastUsed: -5 } }
+];
+
+// 📦 Itemy (dodają statystyki)
+const shopItems = [
+  { name: "Kryształowy miecz", cost: 800, target: "Dorian", bonus: { atk: 4 } },
+  { name: "Pluszak", cost: 300, target: "Natalka", bonus: { heal: 1 } },
+  { name: "Skórzana Zbroja", cost: 500, target: "Łukasz", bonus: { hp: 5 } },
+  { name: "Kamienny Sztylet", cost: 600, target: "Dawid", bonus: { atk: 3 } }
+];
+
+// 🎨 Skiny (zmieniają wygląd)
+const shopSkins = [
+  { name: "Claasic Dawid", cost: 100, target: "Dawid", file: "dawid_skin01.png" },
+  { name: "Claasic Natalka", cost: 100, target: "Natalka", file: "natalka_skin01.png" },
+  { name: "Claasic Rosti", cost: 100, target: "Rosti", file: "rosti_skin01.png" },
+  { name: "Czarno Ubrany Rosti", cost: 150, target: "Rosti", file: "rosti_skin02.png" },
+  { name: "Claasic Ksawery", cost: 100, target: "Ksawery", file: "ksawery_skin01.png" },
+  { name: "Claasic Gabrysia", cost: 100, target: "Gabrysia", file: "gabrysia_skin01.png" },
+  { name: "Claasic Milena", cost: 100, target: "Milena", file: "milena_skin01.png" },
+  { name: "Claasic Karol", cost: 100, target: "Karol", file: "karol_skin01.png" }
+];
+
+let boughtItems = [];       
+let boughtSkins = {}; 
+
+let shopOfferChar;         
+let shopOfferItem;          
+let shopOfferSkin;        
+
+let teamSlots = 3;           
+let slotUpgradeCost = 250;  
+let currentEnemy;
+let currentLevel = 0;
+let money = 0;
+let shopOffer;
+let skins = {};      
+let activeSkins = {};
+
+let availableCharacters = [...baseCharacters]; 
+let playerTeam = [];
+
+function saveGame() {
+  localStorage.setItem("playerTeam", JSON.stringify(playerTeam));
+  localStorage.setItem("availableCharacters", JSON.stringify(availableCharacters));
+  localStorage.setItem("money", money);
+  localStorage.setItem("currentLevel", currentLevel);
+  localStorage.setItem("skins", JSON.stringify(skins)); // 🎨
+  localStorage.setItem("boughtItems", JSON.stringify(boughtItems));
+  localStorage.setItem("teamSlots", teamSlots);
+  localStorage.setItem("slotUpgradeCost", slotUpgradeCost);
+}
+
+function loadGame() {
+  const savedTeam = localStorage.getItem("playerTeam");
+  const savedAvailable = localStorage.getItem("availableCharacters");
+  const savedMoney = localStorage.getItem("money");
+  const savedLevel = localStorage.getItem("currentLevel");
+  const savedSkins = localStorage.getItem("skins");
+  const savedTeamSlots = localStorage.getItem("teamSlots");
+  const savedSlotCost = localStorage.getItem("slotUpgradeCost");
+
+  if (savedSkins) skins = JSON.parse(savedSkins);
+
+  if (savedAvailable) {
+    availableCharacters = JSON.parse(savedAvailable);
+  } else {
+    availableCharacters = [...baseCharacters]; // domyślnie Dawid
+  }
+
+  if (savedTeam) playerTeam = JSON.parse(savedTeam);
+  if (savedMoney) money = parseInt(savedMoney);
+  if (savedLevel) currentLevel = parseInt(savedLevel);
+  if (savedTeamSlots) teamSlots = parseInt(savedTeamSlots);
+  if (savedSlotCost) slotUpgradeCost = parseInt(savedSlotCost);
+
+  document.getElementById("mainMoney").innerText = money;
+}
+
+function buyTeamSlot() {
+  if (money < slotUpgradeCost) {
+    alert(`Za mało 💵! Potrzebujesz ${slotUpgradeCost} 💵.`);
+    return;
+  }
+
+  money -= slotUpgradeCost;   // odejmij pieniądze
+  teamSlots += 1;             // zwiększ liczbę slotów
+  slotUpgradeCost += 250;     // zwiększ koszt kolejnego ulepszenia
+
+  alert(`Nowy slot w drużynie odblokowany! Masz teraz ${teamSlots} slotów.`);
+
+  // Zaktualizuj wyświetlane pieniądze i przycisk
+  document.getElementById("money").innerText = money;
+  renderShop();
+  saveGame();
+}
+
+function init() {
+  const selectDiv = document.getElementById("characterSelect");
+  selectDiv.innerHTML = "";
+  
+  baseCharacters.forEach((ch, i) => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <b>${ch.name}</b><br>
+      Atak: ${ch.atk}<br>
+      HP: ${ch.hp}<br>
+      <button class='green' onclick='chooseCharacter(${i})'>Wybierz</button>`;
+    selectDiv.appendChild(div);
+  });
+
+  updateShop();
+  loadGame();
+  renderTeam();
+}
+
+function renderTargetSelect() {
+  const div = document.getElementById("targetSelect");
+  div.innerHTML = "<h3>🎯 Wybierz cele ataku</h3>";
+
+  if (!playerTeam || playerTeam.length === 0 || !currentEnemies || currentEnemies.length === 0) {
+    div.innerHTML += "<p>(Brak wyboru – walka nie trwa)</p>";
+    return;
+  }
+
+  playerTeam.forEach((p, i) => {
+    let row = document.createElement("div");
+    row.className = "target-row";
+
+    let label = document.createElement("span");
+    label.innerHTML = `<b>${p.name}</b> atakuje: `;
+
+    let select = document.createElement("select");
+    select.className = "target-select";
+    select.id = `target-${i}`;
+
+    currentEnemies.forEach((e, j) => {
+      let opt = document.createElement("option");
+      opt.value = j;
+      opt.text = `${e.name} (❤️${e.hp})`;
+      select.appendChild(opt);
+    });
+
+    row.appendChild(label);
+    row.appendChild(select);
+    div.appendChild(row);
+  });
+}
+
+function renderTeam() {
+  const teamDiv = document.getElementById("teamDisplay");
+  teamDiv.innerHTML = "";
+
+  if (!playerTeam || playerTeam.length === 0) {
+    teamDiv.innerHTML = "<p>(Brak postaci w drużynie)</p>";
+  } else {
+    playerTeam.forEach((p, index) => {
+      const div = document.createElement("div");
+      div.className = "card";
+
+      // lista skinów tej postaci
+      let availableSkins = skins[p.name] || [];
+      let activeSkin = activeSkins[p.name] || "none";
+
+      div.innerHTML = `
+        <b>${p.name || "Nieznana"}</b><br>
+        ${activeSkin !== "none" ? `<img src="${activeSkin}" width="100"><br>` : "(Bez skina)<br>"}
+        Atak: ${p.atk || 0}<br>
+        HP: ${p.hp || 0}<br>
+        <button onclick="removeFromTeam(${index})">Usuń</button>
+        <div id="skinSelect-${p.name}"></div>
+      `;
+      teamDiv.appendChild(div);
+
+      // zawsze twórz select
+      const select = document.createElement("select");
+
+      // opcja "Bez skina"
+      const optNone = document.createElement("option");
+      optNone.value = "none";
+      optNone.textContent = "Bez skina";
+      if (activeSkin === "none") optNone.selected = true;
+      select.appendChild(optNone);
+
+      // opcje dla skinów
+      availableSkins.forEach(file => {
+        const opt = document.createElement("option");
+        opt.value = file;
+        opt.textContent = file;
+        if (file === activeSkin) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      select.addEventListener("change", () => {
+        activeSkins[p.name] = select.value;
+        saveGame();
+        renderTeam(); // odśwież po zmianie
+      });
+
+      document.getElementById(`skinSelect-${p.name}`).appendChild(select);
+    });
+  }
+
+  // Dostępne postacie
+  const selectDiv = document.getElementById("characterSelect");
+  selectDiv.innerHTML = "<h3>Dostępne postacie</h3>";
+  if (!availableCharacters) return;
+
+  availableCharacters.forEach((ch) => {
+    if (!playerTeam.find(p => p.name === ch.name)) {
+      const div = document.createElement("div");
+      div.className = "card";
+
+      let availableSkins = skins[ch.name] || [];
+      let activeSkin = activeSkins[ch.name] || "none";
+
+      div.innerHTML = `
+        <b>${ch.name || "Nieznana"}</b><br>
+        ${activeSkin !== "none" ? `<img src="${activeSkin}" width="100"><br>` : "(Bez skina)<br>"}
+        Atak: ${ch.atk || 0}<br>
+        HP: ${ch.hp || 0}<br>
+        <button class='green' onclick='addToTeam("${ch.name}")'>Załóż</button>
+        <div id="skinSelect-${ch.name}"></div>
+      `;
+      selectDiv.appendChild(div);
+
+      // zawsze twórz select
+      const select = document.createElement("select");
+
+      const optNone = document.createElement("option");
+      optNone.value = "none";
+      optNone.textContent = "Bez skina";
+      if (activeSkin === "none") optNone.selected = true;
+      select.appendChild(optNone);
+
+      availableSkins.forEach(file => {
+        const opt = document.createElement("option");
+        opt.value = file;
+        opt.textContent = file;
+        if (file === activeSkin) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      select.addEventListener("change", () => {
+        activeSkins[ch.name] = select.value;
+        saveGame();
+        renderTeam();
+      });
+
+      document.getElementById(`skinSelect-${ch.name}`).appendChild(select);
+    }
+  });
+}
+
+function addToTeam(name) {
+  if (playerTeam.length >= teamSlots) {
+    alert(`Nie możesz dodać więcej postaci! Kup slot w sklepie.`);
+    return;
+  }
+  // znajdź postać w availableCharacters po nazwie
+  let char = availableCharacters.find(c => c.name === name);
+  if (char) {
+    playerTeam.push(enhanceCharacter(char));
+    saveGame();
+    renderTeam();
+  }
+}
+
+function removeFromTeam(i) {
+  playerTeam.splice(i, 1);
+  saveGame();
+  renderTeam();
+}
+
+function removeCharacter(index) {
+  const removed = playerTeam.splice(index, 1)[0];
+  alert(`${removed.name} został usunięty z drużyny.`);
+  saveGame();
+  renderTeam();
+}
+
+function chooseCharacter(i) {
+  if (playerTeam.length < 3) {
+    playerTeam.push(enhanceCharacter(baseCharacters[i]));
+    alert(`${baseCharacters[i].name} dodany do drużyny!`);
+    saveGame();
+    renderTeam();
+  } else {
+    alert("Masz już 3 postacie!");
+  }
+}
+
+    function startGame() {
+      if (playerTeam.length === 0) {
+        alert("Wybierz chociaż jedną postać!");
+        return;
+      }
+      document.getElementById("mainMenu").style.display = "none";
+      startLevel(currentLevel);
+    }
+
+function startLevel(level) {
+  let numExtraEnemies = 0;
+
+  // Od 25 poziomu i co 25 poziomów rośnie liczba dodatkowych przeciwników
+  if (level + 1 >= 25) {
+    numExtraEnemies = Math.floor((level + 1) / 25);
+  }
+
+  let enemiesThisLevel = [];
+
+  // Co 100 poziomów → Boss Arquel
+  if ((level + 1) % 100 === 0) {
+    enemiesThisLevel.push({ name: "Arquel", hp: 100, atk: 5, boss: true });
+  }
+  // Co 10 poziomów → Titan Stickman
+  else if ((level + 1) % 10 === 0) {
+    enemiesThisLevel.push({ ...enemies.find(e => e.boss) });
+  } 
+  // Normalny przeciwnik
+  else {
+    const normalEnemies = enemies.filter(e => !e.boss);
+    enemiesThisLevel.push({ ...normalEnemies[Math.floor(Math.random() * normalEnemies.length)] });
+  }
+
+  // Dodaj dodatkowych przeciwników co 25 poziomów
+  const normalEnemies = enemies.filter(e => !e.boss);
+  for (let i = 0; i < numExtraEnemies; i++) {
+    enemiesThisLevel.push({ ...normalEnemies[Math.floor(Math.random() * normalEnemies.length)] });
+  }
+
+  currentEnemies = enemiesThisLevel;
+
+  document.getElementById("battleScreen").style.display = "block";
+  document.getElementById("levelNum").innerText = level + 1;
+  document.getElementById("battleLog").innerHTML = "";
+  resetTeamHp();
+  renderStats();
+  renderTargetSelect();
+}
+
+function resetTeamHp() {
+  playerTeam.forEach(p => p.hp = p.baseHp);
+}
+
+function enhanceCharacter(ch) {
+  return { ...ch, hp: ch.hp, baseHp: ch.hp };
+}
+
+function renderStats() {
+  document.getElementById("playerStats").innerHTML =
+    "<h3>Drużyna</h3>" +
+    playerTeam.map(p => `${p.name}: ❤️ ${p.hp} | ⚔️ ${p.atk}${p.heal ? ` | 💚 Heal: ${p.heal}` : ""}${p.stun ? " | ⚡ Stun" : ""}`).join("<br>");
+
+  document.getElementById("enemyStats").innerHTML =
+    "<h3>Przeciwnicy</h3>" +
+    currentEnemies.map(e => `${e.name}: ❤️ ${e.hp} | ⚔️ ${e.atk}${e.heal ? ` | 💚 Heal: ${e.heal}` : ""}${e.stunned ? " | ⚡ Ogłuszony" : ""}`).join("<br>");
+}
+
+function attack() {
+    if (!currentEnemies || currentEnemies.length === 0) return;
+
+    // Odtwarzanie dźwięku przy ataku gracza
+    const sound = document.getElementById('attackSound');
+    if (sound) sound.play();
+
+    // --- Tura graczy ---
+    playerTeam.forEach((p, i) => {
+        let targetIndex = parseInt(document.getElementById(`target-${i}`)?.value);
+        let enemy = currentEnemies[targetIndex] || currentEnemies[Math.floor(Math.random() * currentEnemies.length)];
+        if (!enemy) return;
+
+        // Stun
+        if (p.stun) {
+            if ((currentLevel - (p.stun.lastUsed || -p.stun.cooldown)) >= p.stun.cooldown) {
+                enemy.stunned = p.stun.duration;
+                p.stun.lastUsed = currentLevel;
+                log(`${p.name} ogłusza ${enemy.name} na ${p.stun.duration} tury!`);
+            }
+        }
+
+        // Multiattack
+        if (p.multiAttack) {
+            for (let j = 0; j < p.multiAttack; j++) {
+                let multiTarget = currentEnemies[Math.floor(Math.random() * currentEnemies.length)];
+                if (multiTarget) {
+                    multiTarget.hp -= p.atk;
+                    if (multiTarget.hp < 0) multiTarget.hp = 0;
+                    log(`${p.name} atakuje ${multiTarget.name} za ${p.atk}!`);
+                }
+            }
+        } else {
+            // Normalny atak
+            enemy.hp = (Number(enemy.hp) || 0) - (Number(p.atk) || 0);
+            if (enemy.hp < 0) enemy.hp = 0;
+            log(`${p.name} atakuje ${enemy.name} za ${p.atk}!`);
+        }
+    });
+
+    // Leczenie
+    ["Natalka", "Xantia", "Ewunia", "Julka"].forEach(name => {
+        const healer = playerTeam.find(p => p.name === name);
+        if (healer) {
+            let ally = playerTeam[Math.floor(Math.random() * playerTeam.length)];
+            ally.hp = (Number(ally.hp) || 0) + (Number(healer.heal) || 0);
+            log(`${healer.name} uleczyła ${ally.name} o ${healer.heal} HP!`);
+        }
+    });
+
+    // --- Sprawdzenie wygranej ---
+    currentEnemies = currentEnemies.filter(e => e.hp > 0);
+    if (currentEnemies.length === 0) {
+        log("Pokonałeś wszystkich przeciwników!");
+        // Boss daje więcej nagród
+        money += currentEnemies.some(e => e.boss) ? 50 : 10;
+        document.getElementById("money").innerText = money;
+        document.getElementById("mainMoney").innerText = money;
+        currentLevel++;    
+        resetTeamHp();
+        saveGame();
+        document.getElementById("battleScreen").style.display = "none";
+        document.getElementById("mainMenu").style.display = "block";
+        return;
+    }
+
+    // --- Kontratak przeciwników ---
+    let target = playerTeam[Math.floor(Math.random() * playerTeam.length)];
+
+currentEnemies.forEach(attacker => {
+    if (!attacker) return;
+
+    if (!attacker.stunned || attacker.stunned <= 0) {
+        if (!target) return; // brak celu = koniec ataku
+        target.hp = (Number(target.hp) || 0) - (Number(attacker.atk) || 0);
+
+        if (target.hp <= 0) {
+            log(`${target.name} poległ i znika z drużyny!`);
+            playerTeam = playerTeam.filter(p => p.hp > 0);
+
+            // jeżeli wszyscy martwi → przerwij
+            if (playerTeam.length === 0) {
+                log("Cała drużyna zginęła!");
+                return;
+            }
+
+            // wybór nowego celu
+            target = playerTeam[Math.floor(Math.random() * playerTeam.length)];
+        }
+    } else {
+        attacker.stunned--;
+        log(`${attacker.name} jest ogłuszony i nie atakuje!`);
+    }
+});
+
+    // --- Sprawdzenie przegranej ---
+    if (playerTeam.every(p => p.hp <= 0)) {
+        alert("Przegrałeś! Musisz powtórzyć ten poziom.");
+        resetTeamHp();
+        loadGame();
+        document.getElementById("battleScreen").style.display = "none";
+        document.getElementById("mainMenu").style.display = "block";
+        return;
+    }
+
+    renderStats();
+    renderTargetSelect(); // odświeżenie selectów po turze
+    saveGame();
+}
+
+    function log(msg) {
+      document.getElementById("battleLog").innerHTML += msg + "<br>";
+    }
+
+    function openShop() {
+      document.getElementById("mainMenu").style.display = "none";
+      document.getElementById("shopScreen").style.display = "block";
+      renderShop();
+    }
+
+    function closeShop() {
+      document.getElementById("shopScreen").style.display = "none";
+      document.getElementById("mainMenu").style.display = "block";
+    }
+
+function updateShop() {
+  // losuj postać
+  shopOfferChar = shopCharacters[Math.floor(Math.random() * shopCharacters.length)];
+
+  // losuj item
+  shopOfferItem = shopItems[Math.floor(Math.random() * shopItems.length)];
+
+  // losuj skin
+  shopOfferSkin = shopSkins[Math.floor(Math.random() * shopSkins.length)];
+
+  renderShop();
+  setTimeout(updateShop, 600000); // co 10 minut reset
+}
+
+function buySkin() {
+  const skin = shopOfferSkin;
+  if (!skin) return;
+
+  if (!skins[skin.target]) skins[skin.target] = [];
+  skins[skin.target].push(skin.file);
+  
+  if (money < skin.cost) {
+    alert("Za mało kasy!");
+    return;
+  }
+
+  // upewnij się, że mamy listę skinów dla tej postaci
+  if (!boughtSkins[skin.target]) {
+    boughtSkins[skin.target] = [];
+  }
+
+  // sprawdź czy gracz już kupił ten skin
+  if (boughtSkins[skin.target].includes(skin.file)) {
+    alert(`Masz już ten skin dla ${skin.target}!`);
+    return;
+  }
+
+  // dodaj skin i odejmij pieniądze
+  boughtSkins[skin.target].push(skin.file);
+  money -= skin.cost;
+
+  alert(`Kupiłeś ${skin.name} dla ${skin.target}!`);
+
+  saveGame();
+  renderShop();
+}
+
+function buyItem(item) {
+  if (!item) return;
+  if (money < item.cost) {
+    alert("Za mało kasy!");
+    return;
+  }
+
+  // 🖼️ Jeśli to skin
+  if (item.file) { // sprawdzamy po "file", zamiast type
+    if (!skins[item.target]) skins[item.target] = [];
+    if (skins[item.target].includes(item.file)) {
+      alert(`Masz już skin dla ${item.target}!`);
+      return;
+    }
+
+    skins[item.target].push(item.file);
+    money -= item.cost;
+    alert(`Kupiłeś skin dla ${item.target}!`);
+    saveGame();
+    renderShop();
+    return;
+  }
+
+  // 🎁 Normalne przedmioty
+  let target = playerTeam.find(p => p.name === item.target);
+  if (!target) {
+    alert(`Nie masz ${item.target} w drużynie!`);
+    return;
+  }
+
+  money -= item.cost;
+  if (item.bonus.atk) target.atk += item.bonus.atk;
+  if (item.bonus.hp) target.hp += item.bonus.hp;
+  if (item.bonus.heal) target.heal = (target.heal || 0) + item.bonus.heal;
+
+  boughtItems.push(item.name);
+  alert(`${item.name} został kupiony dla ${item.target}!`);
+
+  saveGame();
+  renderShop();
+}
+
+function renderShop() {
+  let charHTML = "";
+  let itemHTML = "";
+  let skinHTML = "";
+
+  // 👤 Postać w sklepie
+  if (shopOfferChar) {
+    charHTML = `<div class='card'><b>${shopOfferChar.name}</b><br>
+      Atak: ${shopOfferChar.atk}<br>HP: ${shopOfferChar.hp}
+      ${shopOfferChar.heal ? `<br>Leczy: ${shopOfferChar.heal} HP` : ""}
+      <br>Koszt: ${shopOfferChar.cost} 💵
+      <br><button class='green' onclick='buyCharacter()'>Kup</button></div>`;
+  }
+  
+  let slotHTML = `<div class='card'>
+    <b>Ulepszenie slotu w drużynie</b><br>
+    Koszt: ${slotUpgradeCost} 💵<br>
+    Aktualne sloty: ${teamSlots}<br>
+    <button class='green' onclick='buyTeamSlot()'>Kup</button>
+  </div>`;
+
+  // 🎁 Item w sklepie
+  if (shopOfferItem && !boughtItems.includes(shopOfferItem.name)) {
+    itemHTML = `<div class='card'><b>${shopOfferItem.name}</b><br>
+      Dla: ${shopOfferItem.target}<br>
+      ${shopOfferItem.bonus?.atk ? `+${shopOfferItem.bonus.atk} DMG<br>` : ""}
+      ${shopOfferItem.bonus?.hp ? `+${shopOfferItem.bonus.hp} HP<br>` : ""}
+      ${shopOfferItem.bonus?.heal ? `+${shopOfferItem.bonus.heal} Leczenia<br>` : ""}
+      Koszt: ${shopOfferItem.cost} 💵
+      <br><button class='green' onclick='buyItem()'>Kup</button></div>`;
+  }
+
+  // 🎨 Skin w sklepie
+  if (shopOfferSkin) {
+    skinHTML = `<div class='card'><b>${shopOfferSkin.name}</b><br>
+      Skin dla: ${shopOfferSkin.target}<br>
+      Koszt: ${shopOfferSkin.cost} 💵
+      <br><button class='green' onclick='buySkin()'>Kup</button></div>`;
+  }
+
+  document.getElementById("shopOffer").innerHTML = `
+    <div style="display:flex; justify-content:center; gap:20px;">
+      ${charHTML}${itemHTML}${skinHTML}
+    </div>`;
+    
+  document.getElementById("shopOffer").innerHTML = `
+  <div style="display:flex; justify-content:center; gap:20px;">
+    ${charHTML}${itemHTML}${skinHTML}${slotHTML}
+  </div>`;
+
+  document.getElementById("money").innerText = money;
+}
+
+function resetGame() {
+  if (confirm("Na pewno chcesz zresetować całą grę?")) {
+    localStorage.clear();
+    playerTeam = [];
+    money = 0;
+    teamSlots = 3;
+    currentLevel = 0;
+    document.getElementById("mainMoney").innerText = money;
+    init(); 
+    boughtItems = [];
+    skins = {};
+    alert("Gra została zresetowana!");
+  }
+}
+
+function buyCharacter() {
+  if (!shopOfferChar) return;
+  if (money >= shopOfferChar.cost) {
+    // sprawdzamy czy już masz tę postać (w drużynie lub dostępnych)
+    if (
+      availableCharacters.find(c => c.name === shopOfferChar.name) ||
+      playerTeam.find(c => c.name === shopOfferChar.name)
+    ) {
+      alert("Masz już tę postać i nie możesz kupić drugi raz!");
+      return;
+    }
+
+    availableCharacters.push(shopOfferChar);
+    money -= shopOfferChar.cost;
+    document.getElementById("money").innerText = money;
+    document.getElementById("mainMoney").innerText = money;
+    alert(`Kupiłeś ${shopOfferChar.name}! Teraz możesz ją założyć w drużynie.`);
+    saveGame();
+    renderTeam();
+    renderShop();
+  } else {
+    alert("Za mało kasy!");
+  }
+}
+
+    init();
+  </script>
+</body>
+</html>
