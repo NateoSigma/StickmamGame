@@ -95,7 +95,8 @@
 
 const enemies = [
   { name: "Stickman", atk: 1, hp: 10 },
-  { name: "Mutant Stickman", atk: 2, hp: 22 },
+  { name: "Mutant Stickman", atk: 2, hp: 20 },
+  { name: "Titan Stickman", atk: 3, hp: 30 },
   { name: "Astro Mutant Stickman", atk: 6, hp: 22 },
   { name: "Spider Stick", atk: 4, hp: 12 },
   { name: "Stick bird", atk: 2, hp: 10 },
@@ -106,7 +107,7 @@ const enemies = [
   { name: "Zombie Stickman", atk: 2, hp: 16 },
   { name: "Wizard Stickman", atk: 3, hp: 26, heal: 1 },
   { name: "Mega Armor Stickman", atk: 1, hp: 20 },
-  { name: "Titan Stickman", atk: 4, hp: 40, boss: true },
+  { name: "Mroowkens", atk: 4, hp: 40, boss: true },
   { name: "Arquel", hp: 100, attack: 5, boss: true }
 ];
 
@@ -419,7 +420,7 @@ function startLevel(level) {
   if ((level + 1) % 100 === 0) {
     enemiesThisLevel.push({ name: "Arquel", hp: 100, atk: 5, boss: true });
   }
-  // Co 10 poziomów → Titan Stickman
+  // Co 10 poziomów → Nroowkens
   else if ((level + 1) % 10 === 0) {
     enemiesThisLevel.push({ ...enemies.find(e => e.boss) });
   } 
