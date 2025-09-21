@@ -71,10 +71,13 @@
 
 <div id="mapSelect" style="display:none; margin-top:20px;">
   <h2>Wybierz planszę</h2>
-  <div id="mapOptions" style="display:flex; gap:20px; justify-content:center;"></div>
+  <button onclick="chooseMap('minecraft')">Minecraft</button>
+  <button onclick="chooseMap('fnaf')">FNaF</button>
+  <button onclick="chooseMap('klasik')">Klasik</button>
+  <br><br>
   <button class="red" onclick="cancelMapSelect()">Anuluj</button>
 </div>
- 
+
 <div class="battle" id="battleScreen">
   <h2>Poziom <span id="levelNum"></span></h2>
   <div id="playerStats"></div>
@@ -207,12 +210,6 @@ const shopSkins = [
   { name: "Claasic Gabrysia", cost: 100, target: "Gabrysia", file: "gabrysia_skin01.png" },
   { name: "Claasic Milena", cost: 100, target: "Milena", file: "milena_skin01.png" },
   { name: "Claasic Karol", cost: 100, target: "Karol", file: "karol_skin01.png" }
-];
-
-const maps = [
-  { name: "Minecraft", file: "map_minecraft.png" },
-  { name: "FNaF", file: "map_fnaf.png" },
-  { name: "Klasik", file: "map_default.png" }
 ];
 
 let selectedMap = null;
