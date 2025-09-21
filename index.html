@@ -466,43 +466,28 @@ function startGame() {
 }
 
 function startLevel(level) {
-  let numExtraEnemies = 0;
+  currentLevel = level;
+  document.getElementById("battle").style.display = "block";
+  document.getElementById("shop").style.display = "block";
+  document.getElementById("mainMenu").style.display = "none";
+  document.getElementById("mapSelect").style.display = "none";
 
-  // Od 25 poziomu i co 25 poziomów rośnie liczba dodatkowych przeciwników
-  if (level + 1 >= 25) {
-    numExtraEnemies = Math.floor((level + 1) / 25);
-  }
-
-  let enemiesThisLevel = [];
-
-  // Co 100 poziomów → Boss Arquel
-  if ((level + 1) % 100 === 0) {
-    enemiesThisLevel.push({ name: "Arquel", hp: 100, atk: 5, boss: true });
-  }
-  // Co 10 poziomów → Nroowkens
-  else if ((level + 1) % 10 === 0) {
-    enemiesThisLevel.push({ ...enemies.find(e => e.boss) });
-  } 
-  // Normalny przeciwnik
-  else {
-    const normalEnemies = enemies.filter(e => !e.boss);
-    enemiesThisLevel.push({ ...normalEnemies[Math.floor(Math.random() * normalEnemies.length)] });
-  }
-
-  // Dodaj dodatkowych przeciwników co 25 poziomów
-  const normalEnemies = enemies.filter(e => !e.boss);
-  for (let i = 0; i < numExtraEnemies; i++) {
-    enemiesThisLevel.push({ ...normalEnemies[Math.floor(Math.random() * normalEnemies.length)] });
-  }
-
-  currentEnemies = enemiesThisLevel;
-
-  document.getElementById("battleScreen").style.display = "block";
-  document.getElementById("levelNum").innerText = level + 1;
-  document.getElementById("battleLog").innerHTML = "";
   resetTeamHp();
+
+  // wybór przeciwników wg mapy
+  let pool;
+  if (selectedMap === "minecraft") pool = enemiesMinecraft;
+  else if (selectedMap === "fnaf") pool = enemiesFnaf;
+  else pool = enemiesKlasik;
+
+  // na razie prosty wybór – losowy przeciwnik z puli
+  currentEnemies = [JSON.parse(JSON.stringify(pool[Math.floor(Math.random() * pool.length)]))];
+
+  renderTeam();
+  renderEnemies();
+  renderShop();
   renderStats();
-  renderTargetSelect();
+  document.getElementById("battleLog").innerHTML = "";
 }
 
 function resetTeamHp() {
