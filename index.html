@@ -469,29 +469,28 @@ function startGame() {
 
 function startLevel(level) {
   currentLevel = level;
-  document.getElementById("battle").style.display = "block";
-  document.getElementById("shop").style.display = "block";
+  document.getElementById("battleScreen").style.display = "block"; // zamiast "battle"
+  document.getElementById("shopScreen").style.display = "block";   // zamiast "shop"
   document.getElementById("mainMenu").style.display = "none";
   document.getElementById("mapSelect").style.display = "none";
 
   resetTeamHp();
 
-  // wybór przeciwników wg mapy
   let pool;
   if (selectedMap === "minecraft") pool = enemiesMinecraft;
   else if (selectedMap === "fnaf") pool = enemiesFnaf;
   else pool = enemiesKlasik;
 
-  // na razie prosty wybór – losowy przeciwnik z puli
   currentEnemies = [JSON.parse(JSON.stringify(pool[Math.floor(Math.random() * pool.length)]))];
 
   renderTeam();
-  renderEnemies();
+  renderEnemies?.(); // jeśli masz funkcję renderEnemies
   renderShop();
   renderStats();
+  renderTargetSelect();
   document.getElementById("battleLog").innerHTML = "";
 }
-
+    
 function resetTeamHp() {
   playerTeam.forEach(p => p.hp = p.baseHp);
 }
