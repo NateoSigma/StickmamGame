@@ -426,14 +426,15 @@ function chooseCharacter(i) {
   }
 }
 
-    function startGame() {
-      if (playerTeam.length === 0) {
-        alert("Wybierz chociaż jedną postać!");
-        return;
-      }
-      document.getElementById("mainMenu").style.display = "none";
-      startLevel(currentLevel);
-    }
+function startGame() {
+  if (playerTeam.length === 0) {
+    alert("Wybierz chociaż jedną postać!");
+    return;
+  }
+  document.getElementById("mainMenu").style.display = "none";
+  document.getElementById("mapSelect").style.display = "block";
+  renderMapOptions();
+}
 
 function startLevel(level) {
   let numExtraEnemies = 0;
