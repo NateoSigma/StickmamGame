@@ -271,6 +271,35 @@ function loadGame() {
   document.getElementById("mainMoney").innerText = money;
 }
 
+function renderMapOptions() {
+  const div = document.getElementById("mapOptions");
+  div.innerHTML = "";
+  maps.forEach((map, i) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.cursor = "pointer";
+    card.onclick = () => chooseMap(i);
+    card.innerHTML = `
+      <b>${map.name}</b><br>
+      <img src="${map.file}" width="120">
+    `;
+    div.appendChild(card);
+  });
+}
+
+function chooseMap(i) {
+  selectedMap = maps[i];
+  document.body.style.backgroundImage = `url('${selectedMap.file}')`; // 🎨 zmiana tła
+  document.body.style.backgroundSize = "cover";
+  document.getElementById("mapSelect").style.display = "none";
+  startLevel(currentLevel);
+}
+
+function cancelMapSelect() {
+  document.getElementById("mapSelect").style.display = "none";
+  document.getElementById("mainMenu").style.display = "block";
+}
+
 function buyTeamSlot() {
   if (money < slotUpgradeCost) {
     alert(`Za mało 💵! Potrzebujesz ${slotUpgradeCost} 💵.`);
