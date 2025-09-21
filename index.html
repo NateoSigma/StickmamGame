@@ -284,10 +284,8 @@ function renderMapOptions() {
   });
 }
 
-function chooseMap(i) {
-  selectedMap = maps[i];
-  document.body.style.backgroundImage = `url('${selectedMap.file}')`; // 🎨 zmiana tła
-  document.body.style.backgroundSize = "cover";
+function chooseMap(map) {
+  selectedMap = map;
   document.getElementById("mapSelect").style.display = "none";
   startLevel(currentLevel);
 }
