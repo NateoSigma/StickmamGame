@@ -719,42 +719,24 @@ function resetGame() {
 }
 
 function buyItem() {
-  const item = shopOfferItem;
-  if (!item) return;
-  if (money < item.cost) {
-    alert("Za mało kasy!");
-    return;
-  }
-
-  // Jeśli item jest skinem, użyj buySkin
-  if (item.file) {
-    buySkin();
-    return;
-  }
-
-  // Sprawdzenie, czy postać w drużynie
-  let target = playerTeam.find(p => p.name === item.target);
-  if (!target && item.target !== "Any") {
-    alert(`Nie masz ${item.target} w drużynie!`);
-    return;
-  }
-
-  money -= item.cost;
-
-  if (item.target === "Any") {
-    // bonus losowej postaci w drużynie
-    target = playerTeam[Math.floor(Math.random() * playerTeam.length)];
-  }
-
-  if (item.bonus?.atk) target.atk += item.bonus.atk;
-  if (item.bonus?.hp) target.hp += item.bonus.hp;
-  if (item.bonus?.heal) target.heal = (target.heal || 0) + item.bonus.heal;
-
-  boughtItems.push(item.name);
-  alert(`${item.name} został kupiony dla ${target.name}!`);
-
-  saveGame();
-  renderShop();
+    if (money >= currentItem.price) {
+        money -= currentItem.price;
+        let target = team.find(p => p.name === currentItem.target);
+        if (target) {
+            for (let stat in currentItem.bonus) {
+                target[stat] += currentItem.bonus[stat];
+                if (stat === "hp") {
+                    target.baseHp += currentItem.bonus[stat]; // 🔥 naprawa
+                }
+            }
+        }
+        currentItem = null;
+        renderShop();
+        renderTeam();
+        updateStats();
+    } else {
+        alert("Za mało monet!");
+    }
 }
 
 function buyCharacter() {
