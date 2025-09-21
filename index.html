@@ -744,24 +744,31 @@ function resetGame() {
 }
 
 function buyItem() {
-    if (money >= currentItem.price) {
-        money -= currentItem.price;
-        let target = team.find(p => p.name === currentItem.target);
-        if (target) {
-            for (let stat in currentItem.bonus) {
-                target[stat] += currentItem.bonus[stat];
-                if (stat === "hp") {
-                    target.baseHp += currentItem.bonus[stat]; // 🔥 naprawa
-                }
-            }
-        }
-        currentItem = null;
-        renderShop();
-        renderTeam();
-        updateStats();
-    } else {
-        alert("Za mało monet!");
+  if (!shopOfferItem) return;
+
+  if (money < shopOfferItem.cost) {
+    alert("Za mało monet!");
+    return;
+  }
+
+  let target = playerTeam.find(p => p.name === shopOfferItem.target);
+  if (target) {
+    for (let stat in shopOfferItem.bonus) {
+      target[stat] = (target[stat] || 0) + shopOfferItem.bonus[stat];
+      if (stat === "hp") {
+        target.baseHp += shopOfferItem.bonus[stat]; // naprawa HP
+      }
     }
+  }
+
+  money -= shopOfferItem.cost;
+  boughtItems.push(shopOfferItem.name);
+  alert(`Kupiono ${shopOfferItem.name} dla ${shopOfferItem.target}!`);
+
+  saveGame();
+  renderShop();
+  renderTeam();
+  renderStats();
 }
 
 function buyCharacter() {
