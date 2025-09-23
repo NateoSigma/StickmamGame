@@ -246,6 +246,10 @@ let selectedMap = null;
 let boughtItems = [];       
 let boughtSkins = {}; 
 
+let defeatedBosses = [];
+let hardcoreUnlocked = false;
+let hardcoreMode = false;
+    
 let shopOfferChar;         
 let shopOfferItem;          
 let shopOfferSkin;        
@@ -517,12 +521,20 @@ function startGame() {
   document.getElementById("mapSelect").style.display = "block";
 }
 
+if (hardcoreMode) {
+  currentEnemies.forEach(e => {
+    e.hp *= 2;
+    e.atk *= 2;
+  });
+}
+
 function startLevel(level) {
   currentLevel = level;
   document.getElementById("battleScreen").style.display = "block";
   document.getElementById("shopScreen").style.display = "none"; // 🔒 sklep ukryty na starcie
   document.getElementById("mainMenu").style.display = "none";
   document.getElementById("mapSelect").style.display = "none";
+  document.getElementById("hardcoreBtn").style.display = "inline-block";
 
   resetTeamHp();
 
@@ -545,6 +557,25 @@ for (let i = 0; i < enemyCount; i++) {
   currentEnemies.push(enemy);
 }
 
+if (enemy.boss && !defeatedBosses.includes(enemy.name)) {
+  defeatedBosses.push(enemy.name);
+}
+
+// sprawdzamy odblokowanie hardcore
+if (defeatedBosses.includes("Vox") && 
+    defeatedBosses.includes("Golden Freddy") && 
+    defeatedBosses.includes("Enderman")) {
+  hardcoreUnlocked = true;
+  alert("Odblokowano Tryb Hardcore!");
+}
+
+if (hardcoreMode) {
+  currentEnemies.forEach(e => {
+    e.hp *= 2;
+    e.atk *= 2;
+  });
+}
+  
   renderTeam();
   renderEnemies();
   renderShop();
